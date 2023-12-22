@@ -1,27 +1,141 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap");
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --clr-white: rgb(255, 255, 255);
+  --clr-black: rgb(0, 0, 0);
+  --clr-light: rgb(245, 248, 255);
+  --clr-light-gray: rgb(196, 195, 196);
+  --clr-blue: rgb(63, 134, 255);
+  --clr-light-blue: rgb(171, 202, 255);
+}
+body {
+  font-family: "montserrat" !important;
+}
+/* Home Page */
+.parallax-container {
+  height: 100vh;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+.parallax-text {
+  height: 100%;
+}
+
+.parallax-title {
+  margin-top: 23%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: " montserrat";
+  color: #2b2b2b;
+  font-size: 4rem;
+}
+
+.projects-title {
+  font-family: " montserrat";
+  color: #2b2b2b;
+  font-size: 4rem;
+  margin-bottom: 40px;
+}
+
+.description {
+  font-size: 3rem;
+}
+
+.projects-list {
+  margin-top: 40px;
+  margin-bottom: 0;
+}
+
+.contact-button {
+  margin-top: 8%;
+}
+
+.contact-button2 {
+  margin-bottom: 5%;
+}
+.features-list {
+  background: linear-gradient(to top, #ffffff, #dfecf9);
+}
+
+/* About Page */
+.about-title {
+  font-size: 4rem;
+  font-family: " montserrat";
+  color: #2b2b2b;
+}
+
+.about-text {
+  color: #2b2b2b;
+}
+/* Contact Page */
+.contact-title {
+  font-size: 4rem;
+  font-family: " montserrat";
+  color: #2b2b2b;
+  padding: 2% 0 0 5%;
+}
+
+.contact-subtitle {
+  font-size: 2rem;
+  font-family: " montserrat";
+  color: #2b2b2b;
+  padding: 0 5% 2% 5%;
+}
+
+.contact-form {
+  margin-bottom: 2%;
+  margin-top: 40px;
+}
+
+/* Color Visualizer Page */
+.colorvisualiser__container__left h1 {
+  font-weight: 500;
+  color: #05308b;
+}
+
+/* Some Global CSS For File upload */
+.file_details--open {
+  height: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+.uploaded_file--open {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+.uploaded_file__info--active::after {
+  animation: progressMove 800ms ease-in-out;
+  animation-delay: 300ms;
+}
+
+@keyframes progressMove {
+  from {
+    width: 0%;
+    background-color: transparent;
+  }
+
+  to {
+    width: 100%;
+    background-color: var(--clr-blue);
   }
 }
+.upload_area--open {
+  /* Slid Down Animation */
+  animation: slidDown 500ms ease-in-out;
+}
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+@keyframes slidDown {
+  from {
+    height: 28.125rem; /* 450px */
+  }
+
+  to {
+    height: 32rem; /* 560px */
+  }
+}
+.drop_zoon--over {
+  border-color: var(--clr-blue);
 }
