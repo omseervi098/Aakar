@@ -55,9 +55,9 @@ const Footer = () => {
           <div className={`${styles.features} ${styles.footer__list}`}>
             <li className={styles.title}>Feature</li>
             <li>
-              <a href="/colorvisualiser" className="text-decoration-none">
+              <Link href="/colorvisualiser" className="text-decoration-none">
                 Color Visualiser
-              </a>
+              </Link>
             </li>
           </div>
           <div className={`${styles.resources} ${styles.footer__list}`}>

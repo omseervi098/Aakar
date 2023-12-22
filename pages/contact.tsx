@@ -5,7 +5,7 @@ import { init, send } from "emailjs-com";
 
 function Contact() {
   const USER_ID = process.env.REACT_APP_USER_ID;
-  init(USER_ID);
+  // init(USER_ID);
   const SERVICE_ID = process.env.REACT_APP_SERVICE_ID;
   const TEMPLATE_ID = process.env.REACT_APP_TEMPLATE_ID;
 
@@ -24,18 +24,18 @@ function Contact() {
 
   const onSubmit = (event: any) => {
     event.preventDefault();
-    send(SERVICE_ID, TEMPLATE_ID, toSend, USER_ID)
-      .then((response) => {
-        console.log("SUCCESS!", response.status, response.text);
-      })
-      .catch((err) => {
-        console.log("FAILED...", err);
-      });
-    setToSend({
-      user_name: "",
-      user_email: "",
-      user_message: "",
-    });
+    // send(SERVICE_ID, TEMPLATE_ID, toSend, USER_ID)
+    //   .then((response) => {
+    //     console.log("SUCCESS!", response.status, response.text);
+    //   })
+    //   .catch((err) => {
+    //     console.log("FAILED...", err);
+    //   });
+    // setToSend({
+    //   user_name: "",
+    //   user_email: "",
+    //   user_message: "",
+    // });
     alert("Message sent!");
   };
   return (
