@@ -16,14 +16,20 @@ const AppContextProvider = (props: {
   const [maskImg, setMaskImg] = useState<HTMLImageElement | null>(null);
   const [color, setColor] = useState<string | null>("#121212");
   const [error, setError] = useState<string | null>(null);
+  const [texture, setTexture] = useState<HTMLImageElement | null>(null);
+  const [initialImage, setInitialImage] = useState<HTMLImageElement | null>(
+    null
+  );
   return (
     <AppContext.Provider
       value={{
         clicks: [clicks, setClicks],
         image: [image, setImage],
+        initialImage: [initialImage, setInitialImage],
         maskImg: [maskImg, setMaskImg],
         color: [color, setColor],
         error: [error, setError],
+        texture: [texture, setTexture],
       }}
     >
       {props.children}

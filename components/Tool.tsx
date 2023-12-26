@@ -11,12 +11,13 @@ import { ToolProps } from "../utils/helpers/Interfaces";
 import * as _ from "underscore";
 import Image from "next/image";
 import { handleImageScale } from "../utils/helpers/scaleHelper";
-
+import { ImgComparisonSlider } from "@img-comparison-slider/react";
 const Tool = (props: any) => {
   const { handleMouseMove } = props;
   const { handleMouseClick } = props;
   const {
     image: [image],
+    initialImage: [initialImage],
     maskImg: [maskImg, setMaskImg],
   } = useContext(AppContext)!;
 
@@ -53,20 +54,46 @@ const Tool = (props: any) => {
     <div className="position-relative baseimagecontainer">
       {image && (
         <>
-          <Image
-            onMouseMove={handleMouseMove}
-            onDoubleClick={handleMouseClick}
-            onMouseOut={() => _.defer(() => setMaskImg(null))}
-            onTouchMove={handleMouseMove}
-            onTouchStart={handleMouseClick}
-            src={image.src}
-            alt="Image"
-            width={image.width}
-            height={image.height}
-            className={`${
-              shouldFitToWidth ? "w-full" : "h-full"
-            } ${imageClasses}`}
-          ></Image>
+          {props.showSlider && (
+            <ImgComparisonSlider>
+              <Image
+                src={image.src}
+                slot="first"
+                alt="Image"
+                width={image.width}
+                height={image.height}
+                className={`${
+                  shouldFitToWidth ? "w-full" : "h-full"
+                } ${imageClasses}`}
+              ></Image>
+              <Image
+                src={initialImage!.src}
+                alt="Image"
+                slot="second"
+                width={image.width}
+                height={image.height}
+                className={`${
+                  shouldFitToWidth ? "w-full" : "h-full"
+                } ${imageClasses}`}
+              ></Image>
+            </ImgComparisonSlider>
+          )}
+          {!props.showSlider && (
+            <Image
+              onMouseMove={handleMouseMove}
+              onDoubleClick={handleMouseClick}
+              onMouseOut={() => _.defer(() => setMaskImg(null))}
+              onTouchMove={handleMouseMove}
+              onTouchStart={handleMouseClick}
+              src={image.src}
+              alt="Image"
+              width={image.width}
+              height={image.height}
+              className={`${
+                shouldFitToWidth ? "w-full" : "h-full"
+              } ${imageClasses}`}
+            ></Image>
+          )}
           <div id="applied"></div>
         </>
       )}

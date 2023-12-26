@@ -20,7 +20,17 @@ import preimage from "../utils/preimage.json";
 import hexRgb from "hex-rgb";
 import FileUpload from "../components/FileUpload/FileUpload";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Button, Card } from "react-bootstrap";
+import { Button, Card, Offcanvas } from "react-bootstrap";
+import {
+  faDownload,
+  faPlus,
+  faRotate,
+  faRotateLeft,
+  faRotateRight,
+  faShare,
+  faShareNodes,
+  faUpload,
+} from "@fortawesome/free-solid-svg-icons";
 const ColorVisualiser = (props: any) => {
   // const [color, setColor] = useColor("hex", "#121212");
   const {
@@ -29,18 +39,30 @@ const ColorVisualiser = (props: any) => {
     maskImg: [maskImg, setMaskImg],
     color: [color, setColor],
     error: [error, setError],
+    texture: [texture, setTexture],
+    initialImage: [, setInitialImage],
   } = useContext(AppContext)!;
   const { model } = props;
   const fileInput = useRef<HTMLInputElement>(null);
+  const textureFileRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<any>(null);
   const [tensor, setTensor] = useState<any>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [showLoader, setShowLoader] = useState<boolean>(false);
   const [modelScale, setModelScale] = useState<modelScaleProps | null>(null);
+  const [showOffcanvas, setShowOffcanvas] = useState<boolean>(false);
+  const [showColorModal, setShowColorModal] = useState<boolean>(false);
+  const [textureFile, setTextureFile] = useState<any>(null);
+  const [showSlider, setShowSlider] = useState<boolean>(false);
   const handleShowModal = () => setShowModal(true);
   const handleShowLoader = () => setShowLoader(true);
   const handleCloseModal = () => setShowModal(false);
   const handleCloseLoader = () => setShowLoader(false);
+  const handleCloseOffCanvas = () => setShowOffcanvas(false);
+  const handleShowOffCanvas = () => setShowOffcanvas(true);
+  const handleShowColorModal = () => setShowColorModal(true);
+  const handleCloseColorModal = () => setShowColorModal(false);
+  const handleShowSlider = () => setShowSlider(!showSlider);
   const getImageEmbedding = async (file: any) => {
     handleShowModal();
     const formData = new FormData();
@@ -62,11 +84,11 @@ const ColorVisualiser = (props: any) => {
       handleCloseModal();
     } catch (e) {
       handleCloseModal();
-      // setError("API is not Working, Try our Preloaded Images");
-      // setFile(null);
-      // setTimeout(() => {
-      //   setError(null);
-      // }, 2000);
+      setError("API is not Working, Try our Preloaded Images");
+      setFile(null);
+      setTimeout(() => {
+        setError(null);
+      }, 2000);
 
       console.log(e);
     }
@@ -86,6 +108,7 @@ const ColorVisualiser = (props: any) => {
         img.width = width;
         img.height = height;
         setImage(img);
+        setInitialImage(img);
       };
     } catch (error) {
       console.log(error);
@@ -145,6 +168,7 @@ const ColorVisualiser = (props: any) => {
         image.width = width;
         image.height = height;
         setImage(image);
+        setInitialImage(image);
         scrollTo(0, 0);
         Promise.resolve(
           loadNpyTensor(imagedetail.image_embedding, "float32")
@@ -162,8 +186,8 @@ const ColorVisualiser = (props: any) => {
     maskImg: HTMLImageElement,
     color: string
   ) => {
+    if (!image || !maskImg || !color) return;
     try {
-      if (!image || !maskImg || !color) return;
       const imageData = await convertImageEleToData(image);
       const maskData = await convertImageEleToData(maskImg);
       if (!imageData.data || !maskData.data) return;
@@ -183,12 +207,12 @@ const ColorVisualiser = (props: any) => {
       }
 
       const finalImage = await imageDataToImage(imageData);
-      setImage(finalImage);
+      await setImage(finalImage);
     } catch (e) {
       setError("Something went wrong , please try again");
       setTimeout(() => {
         setError(null);
-      }, 2000);
+      }, 1000);
       console.log(e);
     }
   };
@@ -254,13 +278,147 @@ const ColorVisualiser = (props: any) => {
       {file && (
         <>
           <div className="colorvisualiser__container container-fluid m-0 p-0">
-            <div className="row m-0 p-0 align-items-center">
+            <div className="row m-0 p-0 ">
               <div className="col-12 col-lg-8 colorvisualiser__container__left ">
                 <Stage
                   handleShowLoader={handleShowLoader}
                   applyColor={applyColor}
                   handleCloseLoader={handleCloseLoader}
+                  showSlider={showSlider}
                 />
+              </div>
+              <div className="col-12 col-lg-4 colorvisualiser__container__right">
+                <div className="colorvisualiser__tools_container mb-4">
+                  <Card className="border-2 shadow-sm">
+                    <Card.Body className="d-flex   justify-content-between align-items-center ">
+                      <Button className="colorvisualiser__button">
+                        <FontAwesomeIcon icon={faRotateLeft} size="2x" />
+                      </Button>
+                      <Button className="colorvisualiser__button">
+                        <FontAwesomeIcon icon={faRotateRight} size="2x" />
+                      </Button>
+                      <Button className="colorvisualiser__button">
+                        <FontAwesomeIcon icon={faRotate} size="2x" />
+                      </Button>
+                      <Button
+                        className="colorvisualiser__button"
+                        onClick={handleShowSlider}
+                      >
+                        <Image
+                          src="/compare.png"
+                          width={35}
+                          height={35}
+                          alt="Compare"
+                          className="img-fluid"
+                        />
+                      </Button>
+                      <Button className="colorvisualiser__button">
+                        <FontAwesomeIcon icon={faDownload} size="2x" />
+                      </Button>
+                      <Button className="colorvisualiser__button">
+                        <FontAwesomeIcon icon={faShareNodes} size="2x" />
+                      </Button>
+                    </Card.Body>
+                  </Card>
+                </div>
+                <div className="colorvisualiser__color_container mb-4">
+                  <Card className="border-2 shadow-sm ">
+                    <Card.Title className="text-center fw-bold mt-2">
+                      Color Palette
+                    </Card.Title>
+                    <Card.Body className="d-flex flex-wrap gap-2 justify-content-center align-items-center ">
+                      <Button
+                        className="colorvisualiser__color_button"
+                        style={{ backgroundColor: "#121212" }}
+                      ></Button>
+                      <Button
+                        className="colorvisualiser__color_button"
+                        style={{ backgroundColor: "#121212" }}
+                      ></Button>
+                      <Button
+                        className="colorvisualiser__color_button"
+                        style={{ backgroundColor: "#121212" }}
+                      ></Button>
+                      <Button
+                        className="colorvisualiser__color_button"
+                        style={{ backgroundColor: "#e12321" }}
+                      ></Button>
+                      <Button
+                        className="colorvisualiser__color_button"
+                        style={{ backgroundColor: "#e12321" }}
+                      ></Button>
+                      <Button
+                        className="colorvisualiser__color_button"
+                        style={{ backgroundColor: "#e12321" }}
+                      ></Button>
+                      <Button
+                        className="colorvisualiser__color_button"
+                        style={{ backgroundColor: "#e12321" }}
+                      ></Button>
+                      <Button
+                        className="colorvisualiser__color_button"
+                        style={{ backgroundColor: "#e12321" }}
+                      ></Button>
+                      <Button
+                        className="colorvisualiser__color_button"
+                        style={{ backgroundColor: "#e12321" }}
+                      ></Button>
+                      <Button
+                        className="colorvisualiser__color_button"
+                        style={{ backgroundColor: "#e12321" }}
+                      ></Button>
+                      <Button
+                        className="colorvisualiser__color_button"
+                        style={{ backgroundColor: "#e12321" }}
+                      ></Button>
+                      <Button
+                        className="colorvisualiser__color_addbutton"
+                        onClick={handleShowColorModal}
+                      >
+                        <FontAwesomeIcon icon={faPlus} size="2x" />
+                      </Button>
+                    </Card.Body>
+                  </Card>
+                </div>
+                <div className="colorvisualiser__texture_container">
+                  <Card className="border-2 shadow-sm">
+                    <Card.Title className="text-center fw-bold mt-2">
+                      Texture
+                    </Card.Title>
+                    <Card.Body className="d-flex flex-wrap gap-2 justify-content-center align-items-center">
+                      <Button className="p-0 border-0 colorvisualiser__texture_button">
+                        <Image
+                          src="/images/whitedotted.jpg"
+                          alt="Texture"
+                          width={90}
+                          height={90}
+                        />
+                      </Button>
+                      <Button className="p-0 border-0 colorvisualiser__texture_button">
+                        <Image
+                          src="/images/texture2.jpg"
+                          alt="Texture"
+                          width={90}
+                          height={90}
+                        />
+                      </Button>
+                      <Button className="p-0 border-0 colorvisualiser__texture_button">
+                        <Image
+                          src="/images/texture3.jpg"
+                          alt="Texture"
+                          width={90}
+                          height={90}
+                        />
+                      </Button>
+                      <Button
+                        className=" border-0 colorvisualiser__texture_button"
+                        onClick={handleShowOffCanvas}
+                      >
+                        <FontAwesomeIcon icon={faPlus} size="2x" />
+                      </Button>
+                    </Card.Body>
+                  </Card>
+                </div>
               </div>
             </div>
           </div>
@@ -274,6 +432,85 @@ const ColorVisualiser = (props: any) => {
               </div>
             </Modal.Body>
           </Modal>
+          <Modal show={showColorModal} onHide={handleCloseColorModal}>
+            <Modal.Body>
+              <div className="d-flex flex-column justify-content-center align-items-center">
+                <div className="fw-bold mt-2">Choose your color</div>
+              </div>
+            </Modal.Body>
+          </Modal>
+          <Offcanvas
+            show={showOffcanvas}
+            onHide={handleCloseOffCanvas}
+            placement="end"
+          >
+            <Offcanvas.Header closeButton>
+              <Offcanvas.Title>Texture</Offcanvas.Title>
+            </Offcanvas.Header>
+            <Offcanvas.Body>
+              <Card className="border-2 shadow-sm p-0">
+                <Card.Body className="d-flex flex-wrap gap-1 justify-content-center p-1">
+                  <Button className="p-0 border-0 colorvisualiser__texture_button">
+                    <Image
+                      src="/images/texture3.jpg"
+                      alt="Texture"
+                      width={100}
+                      height={100}
+                    />
+                  </Button>
+                  <Button className="p-0 border-0 colorvisualiser__texture_button">
+                    <Image
+                      src="/images/texture3.jpg"
+                      alt="Texture"
+                      width={100}
+                      height={100}
+                    />
+                  </Button>
+                  <Button className="p-0 border-0 colorvisualiser__texture_button">
+                    <Image
+                      src="/images/texture3.jpg"
+                      alt="Texture"
+                      width={100}
+                      height={100}
+                    />
+                  </Button>
+                </Card.Body>
+              </Card>
+              <div className="uploadimage">
+                <div className="fw-bold mt-3 ">Upload your own texture</div>
+                <div className="previewimage mt-3">
+                  <Image
+                    src={textureFile ? textureFile.src : ""}
+                    className="img-fluid"
+                    alt="Texture"
+                    width={200}
+                    height={200}
+                  />
+                </div>
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  title="Upload Image"
+                  ref={textureFileRef}
+                  className="mt-3"
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      const file = e.target.files[0];
+                      const image = document.createElement("img");
+                      image.src = URL.createObjectURL(file);
+                      image.onload = () => {
+                        setTextureFile(image);
+                      };
+                    }
+                  }}
+                />
+                <Button className="mt-3">
+                  <FontAwesomeIcon icon={faUpload} size="1x" /> Upload Image
+                </Button>
+              </div>
+            </Offcanvas.Body>
+          </Offcanvas>
         </>
       )}
       {showModal && file && (

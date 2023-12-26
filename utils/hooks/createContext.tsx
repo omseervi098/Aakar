@@ -22,6 +22,14 @@ interface contextProps {
   ];
   color: [color: string | null, setColor: (e: string | null) => void];
   error: [error: string | null, setError: (e: string | null) => void];
+  texture: [
+    texture: HTMLImageElement | null,
+    setTexture: (e: HTMLImageElement | null) => void
+  ];
+  initialImage: [
+    initialImage: HTMLImageElement | null,
+    setInitialImage: (e: HTMLImageElement | null) => void
+  ];
 }
 
 const AppContext = createContext<contextProps | null>(null);

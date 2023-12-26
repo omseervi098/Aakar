@@ -56,6 +56,7 @@ const Stage = (props: any) => {
         <Tool
           handleMouseMove={handleMouseMove}
           handleMouseClick={handleMouseClick}
+          showSlider={props.showSlider}
         />
       </div>
     </div>
