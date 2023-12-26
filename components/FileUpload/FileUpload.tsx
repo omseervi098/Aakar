@@ -303,6 +303,7 @@ const FileUpload = (props: any) => {
           e.preventDefault();
           const file = props.fileInput.current?.files[0];
           props.setFile(file);
+          props.getEmbedding(file);
         }}
         className=""
       >

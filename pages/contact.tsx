@@ -13,6 +13,7 @@ function Contact() {
     user_name: "",
     user_email: "",
     user_message: "",
+    user_number: "",
   });
 
   const handleChange = (event: any) => {
@@ -44,11 +45,11 @@ function Contact() {
         Any questions? Contact us!
       </h2>
 
-      <Container className=" contact-form ">
+      <Container className=" contact-form col-md-8">
         <form className="needs-validation " onSubmit={onSubmit} noValidate>
           <Container className="mb-3">
             <label htmlFor="validationCustom01" className="form-label p-text">
-              Your Name:{" "}
+              Name{" "}
             </label>
             <input
               type="text"
@@ -57,7 +58,7 @@ function Contact() {
               id="validationCustom01"
               value={toSend.user_name}
               onChange={handleChange}
-              placeholder="Name"
+              placeholder="John Doe"
               required
             />
           </Container>
@@ -72,18 +73,33 @@ function Contact() {
               id="validationCustom02"
               value={toSend.user_email}
               onChange={handleChange}
-              placeholder="name@example.com"
+              placeholder="abc@xyz.com"
               required
             />
           </Container>
           <Container className="mb-3">
             <label htmlFor="validationCustom03" className="form-label p-text">
-              Your message
+              Mobile Number
+            </label>
+            <input
+              type="text"
+              name="user_number"
+              className="form-control"
+              id="validationCustom03"
+              value={toSend.user_number}
+              onChange={handleChange}
+              placeholder="10 digit mobile number"
+              required
+            />
+          </Container>
+          <Container className="mb-3">
+            <label htmlFor="validationCustom04" className="form-label p-text">
+              Message
             </label>
             <textarea
               name="user_message"
               className="form-control"
-              id="validationCustom03"
+              id="validationCustom04"
               value={toSend.user_message}
               onChange={handleChange}
               rows={3}

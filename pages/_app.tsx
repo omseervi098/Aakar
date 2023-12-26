@@ -8,6 +8,7 @@ import NavBar from "../components/NavBar/NavBar";
 import Footer from "../components/Footer/Footer";
 import * as ort from "onnxruntime-web";
 import { useEffect, useState } from "react";
+import AppContextProvider from "../utils/hooks/context";
 export default function App({ Component, pageProps }: AppProps) {
   const [model, setModel] = useState<ort.InferenceSession | null>();
   useEffect(() => {
@@ -25,7 +26,9 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
       <NavBar />
-      <Component {...pageProps} model={model} />
+      <AppContextProvider>
+        <Component {...pageProps} model={model} />
+      </AppContextProvider>
       <Footer />
     </>
   );

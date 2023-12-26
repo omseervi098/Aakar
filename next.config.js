@@ -9,6 +9,9 @@ module.exports = {
     REACT_APP_TEMPLATE_ID: "",
   },
   reactStrictMode: true,
+  images: {
+    domains: ["localhost"],
+  },
   //distDir: 'build',
   webpack: (config, {}) => {
     config.resolve.extensions.push(".ts", ".tsx");
