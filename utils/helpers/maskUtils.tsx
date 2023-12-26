@@ -90,3 +90,61 @@ export const convertImageEleToData = async (image: HTMLImageElement) => {
   })();
   return data;
 };
+export const cropImage = async (aspectRatio: number, file: File) => {
+  return new Promise((resolve, reject) => {
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(file);
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d")!;
+      const imageAspectRatio = img.width / img.height;
+      console.log("image", img.width, img.height);
+      let renderableHeight, renderableWidth, xStart, yStart;
+      console.log(imageAspectRatio, aspectRatio);
+      if (imageAspectRatio > aspectRatio) {
+        renderableHeight = img.height;
+        renderableWidth = img.height * aspectRatio;
+        xStart = (img.width - renderableWidth) / 2;
+        yStart = 0;
+      } else if (imageAspectRatio < aspectRatio) {
+        renderableHeight = img.width / aspectRatio;
+        renderableWidth = img.width;
+        xStart = 0;
+        yStart = (img.height - renderableHeight) / 2;
+      } else {
+        renderableHeight = img.height;
+        renderableWidth = img.width;
+        xStart = 0;
+        yStart = 0;
+      }
+      canvas.width = renderableWidth;
+      canvas.height = renderableHeight;
+      console.log(renderableWidth, renderableHeight);
+      ctx.drawImage(
+        img,
+        xStart,
+        yStart,
+        renderableWidth,
+        renderableHeight,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+      const fimg = canvas.toDataURL("image/jpeg", 1.0);
+      convertURLtoFile(fimg, "cropped.jpg").then((file) => {
+        console.log(file);
+        resolve(file);
+      });
+    };
+  });
+};
+
+export const checkAspectRatio = (file: File) => {
+  const img = document.createElement("img");
+  img.src = URL.createObjectURL(file);
+  img.onload = () => {
+    const aspectRatio = img.width / img.height;
+    return aspectRatio;
+  };
+};

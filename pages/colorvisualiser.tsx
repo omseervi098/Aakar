@@ -28,6 +28,7 @@ const ColorVisualiser = (props: any) => {
     image: [image, setImage],
     maskImg: [maskImg, setMaskImg],
     color: [color, setColor],
+    error: [error, setError],
   } = useContext(AppContext)!;
   const { model } = props;
   const fileInput = useRef<HTMLInputElement>(null);
@@ -45,6 +46,7 @@ const ColorVisualiser = (props: any) => {
     const formData = new FormData();
     formData.append("image", file);
     await loadImage(file);
+    await scrollTo(0, 0);
     try {
       const res = await axios.post(
         "http://localhost:5000/getembedding",
@@ -60,7 +62,12 @@ const ColorVisualiser = (props: any) => {
       handleCloseModal();
     } catch (e) {
       handleCloseModal();
-      setFile(null);
+      // setError("API is not Working, Try our Preloaded Images");
+      // setFile(null);
+      // setTimeout(() => {
+      //   setError(null);
+      // }, 2000);
+
       console.log(e);
     }
   };
@@ -122,6 +129,8 @@ const ColorVisualiser = (props: any) => {
     }
   };
   const handlePreloadedImage = (imagedetail: any) => {
+    handleShowModal();
+
     convertURLtoFile(imagedetail.image, imagedetail.name).then((file) => {
       setFile(file);
       const image = document.createElement("img");
@@ -136,11 +145,15 @@ const ColorVisualiser = (props: any) => {
         image.width = width;
         image.height = height;
         setImage(image);
+        scrollTo(0, 0);
         Promise.resolve(
           loadNpyTensor(imagedetail.image_embedding, "float32")
         ).then((embedding) => {
           setTensor(embedding);
         });
+        setTimeout(() => {
+          handleCloseModal();
+        }, 1500);
       };
     });
   };
@@ -150,7 +163,6 @@ const ColorVisualiser = (props: any) => {
     color: string
   ) => {
     try {
-      handleShowLoader();
       if (!image || !maskImg || !color) return;
       const imageData = await convertImageEleToData(image);
       const maskData = await convertImageEleToData(maskImg);
@@ -172,10 +184,12 @@ const ColorVisualiser = (props: any) => {
 
       const finalImage = await imageDataToImage(imageData);
       setImage(finalImage);
-      handleCloseLoader();
     } catch (e) {
+      setError("Something went wrong , please try again");
+      setTimeout(() => {
+        setError(null);
+      }, 2000);
       console.log(e);
-      handleCloseLoader();
     }
   };
   return (
@@ -241,18 +255,22 @@ const ColorVisualiser = (props: any) => {
         <>
           <div className="colorvisualiser__container container-fluid m-0 p-0">
             <div className="row m-0 p-0 align-items-center">
-              <div className="col-12 col-lg-9 colorvisualiser__container__left ">
+              <div className="col-12 col-lg-8 colorvisualiser__container__left ">
                 <Stage
                   handleShowLoader={handleShowLoader}
                   applyColor={applyColor}
+                  handleCloseLoader={handleCloseLoader}
                 />
               </div>
             </div>
           </div>
           <Modal show={showLoader} onHide={handleCloseLoader} centered>
             <Modal.Body>
-              <div className="spinner-border ms-2" role="status">
-                <span className="visually-hidden">Loading...</span>
+              <div className=" d-flex gap-4 justify-content-center align-items-center">
+                <div className="spinner-border ms-2" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <div className=" fw-bold mt-2">Making your home colorful</div>
               </div>
             </Modal.Body>
           </Modal>
@@ -311,6 +329,13 @@ const ColorVisualiser = (props: any) => {
           </Modal.Body>
         </Modal>
       )}
+      <Modal show={error != null} centered onHide={() => setError(null)}>
+        <Modal.Body>
+          <div className="fw-bold fw-capitalize text-center text-danger">
+            {error}
+          </div>
+        </Modal.Body>
+      </Modal>
     </div>
   );
 };

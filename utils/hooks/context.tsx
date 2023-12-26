@@ -15,6 +15,7 @@ const AppContextProvider = (props: {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [maskImg, setMaskImg] = useState<HTMLImageElement | null>(null);
   const [color, setColor] = useState<string | null>("#121212");
+  const [error, setError] = useState<string | null>(null);
   return (
     <AppContext.Provider
       value={{
@@ -22,6 +23,7 @@ const AppContextProvider = (props: {
         image: [image, setImage],
         maskImg: [maskImg, setMaskImg],
         color: [color, setColor],
+        error: [error, setError],
       }}
     >
       {props.children}

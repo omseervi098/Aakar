@@ -10,7 +10,6 @@ import * as _ from "underscore";
 import Tool from "./Tool";
 import { modelInputProps } from "../utils/helpers/Interfaces";
 import AppContext from "../utils/hooks/createContext";
-import { handleImageScale } from "../utils/helpers/scaleHelper";
 
 const Stage = (props: any) => {
   const {

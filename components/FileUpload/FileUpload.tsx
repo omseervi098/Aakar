@@ -1,6 +1,8 @@
 import Image from "next/image";
 import styles from "./FileUpload.module.css";
+import imageCompression from "browser-image-compression";
 import React, { useEffect } from "react";
+import { cropImage } from "../../utils/helpers/maskUtils";
 const FileUpload = (props: any) => {
   // Design By
   // - https://dribbble.com/shots/13992184-File-Uploader-Drag-Drop
@@ -206,14 +208,7 @@ const FileUpload = (props: any) => {
 
       // If The Uploaded File Is An Image
       if (isImage.length !== 0) {
-        // Check, If File Size Is 2MB or Less
-        if (fileSize <= 2000000) {
-          // 2MB :)
-          return true;
-        } else {
-          // Else File Size
-          return alert("Please Your File Should be 2 Megabytes or Less");
-        }
+        return true;
       } else {
         // Else File Type
         return alert("Please make sure to upload An Image File Type");
@@ -235,6 +230,11 @@ const FileUpload = (props: any) => {
               className={styles.upload_area__tooltip_data}
             ></span>
           </strong>
+        </p>
+        <p className="fw-bold pb-0 mb-0">
+          Will Crop Image to{" "}
+          <span className="text-danger">3:2 aspect ratio</span> for better
+          viewing experience.
         </p>
       </div>
       <div
@@ -299,11 +299,29 @@ const FileUpload = (props: any) => {
         </div>
       </div>
       <form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
           const file = props.fileInput.current?.files[0];
-          props.setFile(file);
-          props.getEmbedding(file);
+          const options = {
+            maxSizeMB: 2,
+            maxWidthOrHeight: 1920,
+            useWebWorker: true,
+          };
+          try {
+            const compressedFile = await imageCompression(file, options);
+            // convert the blob to file
+            const compfile = new File([compressedFile], file.name, {
+              type: "image/jpeg",
+              lastModified: compressedFile.lastModified,
+            });
+            cropImage(3 / 2, compfile).then((image) => {
+              console.log(image);
+              props.setFile(image);
+              props.getEmbedding(image);
+            });
+          } catch (error) {
+            console.log(error);
+          }
         }}
         className=""
       >

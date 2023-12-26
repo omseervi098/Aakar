@@ -50,14 +50,15 @@ const Tool = (props: any) => {
   const maskImageClasses = `maskImage`;
   // Render the image and the predicted mask image on top
   return (
-    <div className="position-relative">
+    <div className="position-relative baseimagecontainer">
       {image && (
         <>
           <Image
             onMouseMove={handleMouseMove}
-            onClick={handleMouseClick}
+            onDoubleClick={handleMouseClick}
             onMouseOut={() => _.defer(() => setMaskImg(null))}
-            onTouchStart={handleMouseMove}
+            onTouchMove={handleMouseMove}
+            onTouchStart={handleMouseClick}
             src={image.src}
             alt="Image"
             width={image.width}
