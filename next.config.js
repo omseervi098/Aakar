@@ -10,7 +10,12 @@ module.exports = {
   },
   reactStrictMode: true,
   images: {
-    domains: ["localhost"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "*",
+      },
+    ],
   },
   //distDir: 'build',
   webpack: (config, {}) => {

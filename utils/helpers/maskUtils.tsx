@@ -148,3 +148,20 @@ export const checkAspectRatio = (file: File) => {
     return aspectRatio;
   };
 };
+
+export const getBase64 = (image: any) => {
+  return new Promise((resolve, reject) => {
+    const img = document.createElement("img");
+    img.src = image.src;
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(img, 0, 0);
+      const dataURL = canvas.toDataURL("image/png");
+      console.log(dataURL);
+      resolve(dataURL);
+    };
+  });
+};

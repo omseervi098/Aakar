@@ -1,10 +1,12 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
 import Modal from "react-bootstrap/Modal";
-import { Tensor } from "onnxruntime-web";
+import texturedata from "../utils/texturedata.json";
+import colordata from "../utils/colordata.json";
 import axios from "axios";
 import Image from "next/image";
 import { handleImageScale } from "../utils/helpers/scaleHelper";
 import { modelScaleProps } from "../utils/helpers/Interfaces";
+import { Cloudinary } from "@cloudinary/url-gen";
 import {
   onnxMaskToImage,
   loadNpyTensor,
@@ -12,6 +14,7 @@ import {
   convertURLtoFile,
   convertImageEleToData,
   imageDataToImage,
+  getBase64,
 } from "../utils/helpers/maskUtils";
 import { modelData } from "../utils/helpers/onnxModelAPI";
 import Stage from "../components/Stage";
@@ -27,7 +30,6 @@ import {
   faRotate,
   faRotateLeft,
   faRotateRight,
-  faShare,
   faShareNodes,
   faUpload,
 } from "@fortawesome/free-solid-svg-icons";
@@ -63,6 +65,8 @@ const ColorVisualiser = (props: any) => {
   const handleShowColorModal = () => setShowColorModal(true);
   const handleCloseColorModal = () => setShowColorModal(false);
   const handleShowSlider = () => setShowSlider(!showSlider);
+  const cld = new Cloudinary({ cloud: { cloudName: "dbvxdjjpr" } });
+
   const getImageEmbedding = async (file: any) => {
     handleShowModal();
     const formData = new FormData();
@@ -216,6 +220,19 @@ const ColorVisualiser = (props: any) => {
       console.log(e);
     }
   };
+  const handleTextureClick = (textureFile: any) => {
+    // load image
+    try {
+      const img = document.createElement("img"); // create a new image object
+      img.src = URL.createObjectURL(textureFile);
+      img.onload = () => {
+        console.log(img);
+        setTexture(img);
+      };
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <div className="colorvisualiser py-5 pb-5">
       {!file && (
@@ -327,50 +344,17 @@ const ColorVisualiser = (props: any) => {
                       Color Palette
                     </Card.Title>
                     <Card.Body className="d-flex flex-wrap gap-2 justify-content-center align-items-center ">
-                      <Button
-                        className="colorvisualiser__color_button"
-                        style={{ backgroundColor: "#121212" }}
-                      ></Button>
-                      <Button
-                        className="colorvisualiser__color_button"
-                        style={{ backgroundColor: "#121212" }}
-                      ></Button>
-                      <Button
-                        className="colorvisualiser__color_button"
-                        style={{ backgroundColor: "#121212" }}
-                      ></Button>
-                      <Button
-                        className="colorvisualiser__color_button"
-                        style={{ backgroundColor: "#e12321" }}
-                      ></Button>
-                      <Button
-                        className="colorvisualiser__color_button"
-                        style={{ backgroundColor: "#e12321" }}
-                      ></Button>
-                      <Button
-                        className="colorvisualiser__color_button"
-                        style={{ backgroundColor: "#e12321" }}
-                      ></Button>
-                      <Button
-                        className="colorvisualiser__color_button"
-                        style={{ backgroundColor: "#e12321" }}
-                      ></Button>
-                      <Button
-                        className="colorvisualiser__color_button"
-                        style={{ backgroundColor: "#e12321" }}
-                      ></Button>
-                      <Button
-                        className="colorvisualiser__color_button"
-                        style={{ backgroundColor: "#e12321" }}
-                      ></Button>
-                      <Button
-                        className="colorvisualiser__color_button"
-                        style={{ backgroundColor: "#e12321" }}
-                      ></Button>
-                      <Button
-                        className="colorvisualiser__color_button"
-                        style={{ backgroundColor: "#e12321" }}
-                      ></Button>
+                      {colordata.map((color: any, index: number) => {
+                        return (
+                          <Button
+                            className="colorvisualiser__color_button"
+                            key={index}
+                            style={{ backgroundColor: color.hex }}
+                            onClick={() => setColor(color.hex)}
+                          ></Button>
+                        );
+                      })}
+
                       <Button
                         className="colorvisualiser__color_addbutton"
                         onClick={handleShowColorModal}
@@ -452,7 +436,7 @@ const ColorVisualiser = (props: any) => {
                 <Card.Body className="d-flex flex-wrap gap-1 justify-content-center p-1">
                   <Button className="p-0 border-0 colorvisualiser__texture_button">
                     <Image
-                      src="/images/texture3.jpg"
+                      src="/images/whitedotted.jpg"
                       alt="Texture"
                       width={100}
                       height={100}
@@ -505,7 +489,7 @@ const ColorVisualiser = (props: any) => {
                     }
                   }}
                 />
-                <Button className="mt-3">
+                <Button className="mt-3" onClick={async (e) => {}}>
                   <FontAwesomeIcon icon={faUpload} size="1x" /> Upload Image
                 </Button>
               </div>
@@ -559,7 +543,7 @@ const ColorVisualiser = (props: any) => {
             </div>
             <div className="d-flex justify-content-center align-items-center fw-bold mt-2">
               Generating Image Embedding
-              <div className="spinner-border ms-2" role="status">
+              <div className="spinner-border ms-2 " role="status">
                 <span className="visually-hidden">Loading...</span>
               </div>
             </div>

@@ -47,7 +47,7 @@ const Stage = (props: any) => {
     handleMouseMove(e);
     // apply color to mask
     if (!maskImg) return;
-    props.applyColor(image, maskImg, "#cae4fe");
+    props.applyColor(image, maskImg, color);
   };
   const flexCenterClasses = "flex items-center justify-center";
   return (

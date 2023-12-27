@@ -1,0 +1,17 @@
+[
+    {
+        "id": "1",
+        "name": "White Dotted",
+        "url": "/textures/texture1.jpg"
+    },
+    {
+        "id": "2",
+        "name": "Yello Tiles",
+        "url": "/textures/texture2.jpg"
+    },
+    {
+        "id": "3",
+        "name": "Pink Bricks",
+        "url": "/textures/texture3.jpg"
+    }
+]
