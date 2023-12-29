@@ -9,8 +9,10 @@ import Footer from "../components/Footer/Footer";
 import * as ort from "onnxruntime-web";
 import { useEffect, useState } from "react";
 import AppContextProvider from "../utils/hooks/context";
+
 export default function App({ Component, pageProps }: AppProps) {
   const [model, setModel] = useState<ort.InferenceSession | null>();
+
   useEffect(() => {
     const initmodel = async () => {
       const session = await ort.InferenceSession.create(

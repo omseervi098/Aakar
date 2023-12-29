@@ -90,6 +90,8 @@ export const convertImageEleToData = async (image: HTMLImageElement) => {
   })();
   return data;
 };
+
+// crop image into 3:2 aspect ratio from center
 export const cropImage = async (aspectRatio: number, file: File) => {
   return new Promise((resolve, reject) => {
     const img = document.createElement("img");
@@ -140,6 +142,7 @@ export const cropImage = async (aspectRatio: number, file: File) => {
   });
 };
 
+//return  aspect ratio of image
 export const checkAspectRatio = (file: File) => {
   const img = document.createElement("img");
   img.src = URL.createObjectURL(file);
@@ -148,7 +151,7 @@ export const checkAspectRatio = (file: File) => {
     return aspectRatio;
   };
 };
-
+// convert image element to base64
 export const getBase64 = (image: any) => {
   return new Promise((resolve, reject) => {
     const img = document.createElement("img");
@@ -160,8 +163,52 @@ export const getBase64 = (image: any) => {
       const ctx = canvas.getContext("2d")!;
       ctx.drawImage(img, 0, 0);
       const dataURL = canvas.toDataURL("image/png");
-      console.log(dataURL);
+
       resolve(dataURL);
     };
   });
 };
+// scale texture image to base image size
+export const scaleTexture = async (
+  baseImg: HTMLImageElement,
+  textureImg: HTMLImageElement
+) => {
+  return new Promise((resolve, reject) => {
+    if (!baseImg || !textureImg) {
+      reject(null);
+    }
+    const img = document.createElement("img");
+    img.src = textureImg!.src;
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = baseImg.width;
+
+      canvas.height = baseImg.height;
+      console.log(canvas.width, canvas.height, img.width, img.height);
+      const ctx = canvas.getContext("2d")!;
+      // repeat texture image to scale to base image size
+      const pattern = ctx.createPattern(img, "repeat")!;
+      // Repeat the texture horizontally and vertically until reaching or exceeding baseWidth and baseHeight
+      for (let y = 0; y < baseImg.height; y += img.height) {
+        for (let x = 0; x < baseImg.width; x += img.width) {
+          ctx.fillStyle = pattern;
+          ctx.fillRect(x, y, img.width, img.height);
+        }
+      }
+      const dataURL = canvas.toDataURL("image/png");
+      const image = document.createElement("img");
+      image.src = dataURL;
+      image.onload = () => {
+        resolve(image);
+      };
+    };
+  });
+};
+// download image
+export const downloadImage = (image: HTMLImageElement) => {
+  const link = document.createElement("a");
+  link.download = "image.png";
+  link.href = image.src;
+  link.click();
+};
+// share image by uploading to firebase storage

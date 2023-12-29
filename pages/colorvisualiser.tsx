@@ -15,6 +15,8 @@ import {
   convertImageEleToData,
   imageDataToImage,
   getBase64,
+  scaleTexture,
+  downloadImage,
 } from "../utils/helpers/maskUtils";
 import { modelData } from "../utils/helpers/onnxModelAPI";
 import Stage from "../components/Stage";
@@ -22,6 +24,7 @@ import AppContext from "../utils/hooks/createContext";
 import preimage from "../utils/preimage.json";
 import hexRgb from "hex-rgb";
 import FileUpload from "../components/FileUpload/FileUpload";
+import undoRedo from "../utils/helpers/linkedlist";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Button, Card, Offcanvas } from "react-bootstrap";
 import {
@@ -42,7 +45,7 @@ const ColorVisualiser = (props: any) => {
     color: [color, setColor],
     error: [error, setError],
     texture: [texture, setTexture],
-    initialImage: [, setInitialImage],
+    initialImage: [initialImage, setInitialImage],
   } = useContext(AppContext)!;
   const { model } = props;
   const fileInput = useRef<HTMLInputElement>(null);
@@ -112,6 +115,7 @@ const ColorVisualiser = (props: any) => {
         img.width = width;
         img.height = height;
         setImage(img);
+        undoRedo.setImage(img);
         setInitialImage(img);
       };
     } catch (error) {
@@ -172,6 +176,7 @@ const ColorVisualiser = (props: any) => {
         image.width = width;
         image.height = height;
         setImage(image);
+        undoRedo.setImage(image);
         setInitialImage(image);
         scrollTo(0, 0);
         Promise.resolve(
@@ -212,6 +217,7 @@ const ColorVisualiser = (props: any) => {
 
       const finalImage = await imageDataToImage(imageData);
       await setImage(finalImage);
+      await undoRedo!.insert(finalImage);
     } catch (e) {
       setError("Something went wrong , please try again");
       setTimeout(() => {
@@ -220,18 +226,84 @@ const ColorVisualiser = (props: any) => {
       console.log(e);
     }
   };
-  const handleTextureClick = (textureFile: any) => {
+  const applyTexture = async (
+    image: HTMLImageElement,
+    maskImg: HTMLImageElement,
+    texture: HTMLImageElement
+  ) => {
+    if (!image || !maskImg || !texture) return;
+    try {
+      const imageData = await convertImageEleToData(image);
+      const maskData = await convertImageEleToData(maskImg);
+      const textureData = await convertImageEleToData(texture);
+      if (!imageData.data || !maskData.data || !textureData.data) return;
+      for (let i = 0; i < maskData.data.length; i += 4) {
+        if (
+          maskData.data[i] === 0 &&
+          maskData.data[i + 1] === 114 &&
+          maskData.data[i + 2] === 189
+        ) {
+          // color the pixel
+          imageData.data[i] = textureData.data[i];
+          imageData.data[i + 1] = textureData.data[i + 1];
+          imageData.data[i + 2] = textureData.data[i + 2];
+          imageData.data[i + 3] = 255;
+        }
+      }
+
+      const finalImage = await imageDataToImage(imageData);
+      await setImage(finalImage);
+      await undoRedo!.insert(finalImage);
+    } catch (e) {
+      setError("Something went wrong , please try again");
+      setTimeout(() => {
+        setError(null);
+      }, 1000);
+      console.log(e);
+    }
+  };
+  const handleTextureClick = (texture: any) => {
     // load image
+    if (!image) return;
     try {
       const img = document.createElement("img"); // create a new image object
-      img.src = URL.createObjectURL(textureFile);
+      img.src = texture.url;
       img.onload = () => {
-        console.log(img);
-        setTexture(img);
+        scaleTexture(image, img).then((scaledTexture) => {
+          console.log(scaledTexture);
+          if (!scaledTexture) return;
+          if (scaledTexture instanceof HTMLImageElement) {
+            setTexture(scaledTexture);
+          }
+          setColor(null);
+        });
       };
     } catch (error) {
       console.log(error);
     }
+  };
+  const handleUndo = () => {
+    const image = undoRedo!.undo();
+    console.log(image);
+    if (image instanceof HTMLImageElement) {
+      setImage(image);
+    }
+  };
+  const handleRedo = () => {
+    const image = undoRedo!.redo();
+    console.log(image);
+    if (image instanceof HTMLImageElement) {
+      setImage(image);
+    }
+  };
+  const handleReset = () => {
+    setImage(initialImage);
+    undoRedo!.reset();
+  };
+  const shareImage = () => {
+    //upload image to firebase and get url
+    // props.handleUpload(image!);
+    if (!image) return;
   };
   return (
     <div className="colorvisualiser py-5 pb-5">
@@ -300,6 +372,7 @@ const ColorVisualiser = (props: any) => {
                 <Stage
                   handleShowLoader={handleShowLoader}
                   applyColor={applyColor}
+                  applyTexture={applyTexture}
                   handleCloseLoader={handleCloseLoader}
                   showSlider={showSlider}
                 />
@@ -308,13 +381,22 @@ const ColorVisualiser = (props: any) => {
                 <div className="colorvisualiser__tools_container mb-4">
                   <Card className="border-2 shadow-sm">
                     <Card.Body className="d-flex   justify-content-between align-items-center ">
-                      <Button className="colorvisualiser__button">
+                      <Button
+                        className="colorvisualiser__button"
+                        onClick={handleUndo}
+                      >
                         <FontAwesomeIcon icon={faRotateLeft} size="2x" />
                       </Button>
-                      <Button className="colorvisualiser__button">
+                      <Button
+                        className="colorvisualiser__button"
+                        onClick={handleRedo}
+                      >
                         <FontAwesomeIcon icon={faRotateRight} size="2x" />
                       </Button>
-                      <Button className="colorvisualiser__button">
+                      <Button
+                        className="colorvisualiser__button"
+                        onClick={handleReset}
+                      >
                         <FontAwesomeIcon icon={faRotate} size="2x" />
                       </Button>
                       <Button
@@ -329,10 +411,18 @@ const ColorVisualiser = (props: any) => {
                           className="img-fluid"
                         />
                       </Button>
-                      <Button className="colorvisualiser__button">
+                      <Button
+                        className="colorvisualiser__button"
+                        onClick={() => {
+                          downloadImage(image!);
+                        }}
+                      >
                         <FontAwesomeIcon icon={faDownload} size="2x" />
                       </Button>
-                      <Button className="colorvisualiser__button">
+                      <Button
+                        className="colorvisualiser__button"
+                        onClick={shareImage}
+                      >
                         <FontAwesomeIcon icon={faShareNodes} size="2x" />
                       </Button>
                     </Card.Body>
@@ -350,7 +440,10 @@ const ColorVisualiser = (props: any) => {
                             className="colorvisualiser__color_button"
                             key={index}
                             style={{ backgroundColor: color.hex }}
-                            onClick={() => setColor(color.hex)}
+                            onClick={() => {
+                              setColor(color.hex);
+                              setTexture(null);
+                            }}
                           ></Button>
                         );
                       })}
@@ -372,28 +465,31 @@ const ColorVisualiser = (props: any) => {
                     <Card.Body className="d-flex flex-wrap gap-2 justify-content-center align-items-center">
                       <Button className="p-0 border-0 colorvisualiser__texture_button">
                         <Image
-                          src="/images/whitedotted.jpg"
+                          src={texture ? texture.src : ""}
                           alt="Texture"
                           width={90}
                           height={90}
                         />
                       </Button>
-                      <Button className="p-0 border-0 colorvisualiser__texture_button">
-                        <Image
-                          src="/images/texture2.jpg"
-                          alt="Texture"
-                          width={90}
-                          height={90}
-                        />
-                      </Button>
-                      <Button className="p-0 border-0 colorvisualiser__texture_button">
-                        <Image
-                          src="/images/texture3.jpg"
-                          alt="Texture"
-                          width={90}
-                          height={90}
-                        />
-                      </Button>
+                      {texturedata
+                        .slice(0, 2)
+                        .map((texture: any, index: number) => {
+                          return (
+                            <Button
+                              className="p-0 border-0 colorvisualiser__texture_button"
+                              key={index}
+                              onClick={() => handleTextureClick(texture)}
+                            >
+                              <Image
+                                src={texture.url}
+                                alt="Texture"
+                                width={90}
+                                height={90}
+                              />
+                            </Button>
+                          );
+                        })}
+
                       <Button
                         className=" border-0 colorvisualiser__texture_button"
                         onClick={handleShowOffCanvas}
@@ -434,30 +530,22 @@ const ColorVisualiser = (props: any) => {
             <Offcanvas.Body>
               <Card className="border-2 shadow-sm p-0">
                 <Card.Body className="d-flex flex-wrap gap-1 justify-content-center p-1">
-                  <Button className="p-0 border-0 colorvisualiser__texture_button">
-                    <Image
-                      src="/images/whitedotted.jpg"
-                      alt="Texture"
-                      width={100}
-                      height={100}
-                    />
-                  </Button>
-                  <Button className="p-0 border-0 colorvisualiser__texture_button">
-                    <Image
-                      src="/images/texture3.jpg"
-                      alt="Texture"
-                      width={100}
-                      height={100}
-                    />
-                  </Button>
-                  <Button className="p-0 border-0 colorvisualiser__texture_button">
-                    <Image
-                      src="/images/texture3.jpg"
-                      alt="Texture"
-                      width={100}
-                      height={100}
-                    />
-                  </Button>
+                  {texturedata.slice(2).map((texture: any, index: number) => {
+                    return (
+                      <Button
+                        className="p-0 border-0 colorvisualiser__texture_button"
+                        key={index}
+                        onClick={() => handleTextureClick(texture)}
+                      >
+                        <Image
+                          src={texture.url}
+                          alt="Texture"
+                          width={100}
+                          height={100}
+                        />
+                      </Button>
+                    );
+                  })}
                 </Card.Body>
               </Card>
               <div className="uploadimage">

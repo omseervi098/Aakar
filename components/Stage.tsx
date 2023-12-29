@@ -17,6 +17,7 @@ const Stage = (props: any) => {
     image: [image],
     maskImg: [maskImg],
     color: [color],
+    texture: [texture],
   } = useContext(AppContext)!;
 
   const getClick = (x: number, y: number): modelInputProps => {
@@ -47,7 +48,8 @@ const Stage = (props: any) => {
     handleMouseMove(e);
     // apply color to mask
     if (!maskImg) return;
-    props.applyColor(image, maskImg, color);
+    if (texture) props.applyTexture(image, maskImg, texture);
+    else if (color) props.applyColor(image, maskImg, color);
   };
   const flexCenterClasses = "flex items-center justify-center";
   return (
