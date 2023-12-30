@@ -207,7 +207,7 @@ export const scaleTexture = async (
 // download image
 export const downloadImage = (image: HTMLImageElement) => {
   const link = document.createElement("a");
-  link.download = "image.png";
+  link.download = "EditedImage" + Date.now() + ".jpg";
   link.href = image.src;
   link.click();
 };

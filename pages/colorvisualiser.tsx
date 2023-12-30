@@ -5,8 +5,9 @@ import colordata from "../utils/colordata.json";
 import axios from "axios";
 import Image from "next/image";
 import { handleImageScale } from "../utils/helpers/scaleHelper";
+import { ColorPicker, useColor } from "react-color-palette";
+import "react-color-palette/css";
 import { modelScaleProps } from "../utils/helpers/Interfaces";
-import { Cloudinary } from "@cloudinary/url-gen";
 import {
   onnxMaskToImage,
   loadNpyTensor,
@@ -14,7 +15,6 @@ import {
   convertURLtoFile,
   convertImageEleToData,
   imageDataToImage,
-  getBase64,
   scaleTexture,
   downloadImage,
 } from "../utils/helpers/maskUtils";
@@ -27,15 +27,24 @@ import FileUpload from "../components/FileUpload/FileUpload";
 import undoRedo from "../utils/helpers/linkedlist";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Button, Card, Offcanvas } from "react-bootstrap";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { faCopy, faPlus, faUpload } from "@fortawesome/free-solid-svg-icons";
 import {
-  faDownload,
-  faPlus,
-  faRotate,
-  faRotateLeft,
-  faRotateRight,
-  faShareNodes,
-  faUpload,
-} from "@fortawesome/free-solid-svg-icons";
+  IoIosCloudDownload,
+  IoIosRedo,
+  IoIosUndo,
+  IoMdImage,
+} from "react-icons/io";
+import { RxReset } from "react-icons/rx";
+import { MdCompare } from "react-icons/md";
+import { FaImage, FaShare } from "react-icons/fa";
+import {
+  faFacebook,
+  faLinkedin,
+  faTwitter,
+  faWhatsapp,
+} from "@fortawesome/free-brands-svg-icons";
 const ColorVisualiser = (props: any) => {
   // const [color, setColor] = useColor("hex", "#121212");
   const {
@@ -54,11 +63,14 @@ const ColorVisualiser = (props: any) => {
   const [tensor, setTensor] = useState<any>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [showLoader, setShowLoader] = useState<boolean>(false);
+  const [showShareModal, setShowShareModal] = useState<boolean>(false);
   const [modelScale, setModelScale] = useState<modelScaleProps | null>(null);
   const [showOffcanvas, setShowOffcanvas] = useState<boolean>(false);
   const [showColorModal, setShowColorModal] = useState<boolean>(false);
   const [textureFile, setTextureFile] = useState<any>(null);
   const [showSlider, setShowSlider] = useState<boolean>(false);
+  const [shareURL, setShareURL] = useState<string>("");
+  const [colour, setColour] = useColor("#561ecb");
   const handleShowModal = () => setShowModal(true);
   const handleShowLoader = () => setShowLoader(true);
   const handleCloseModal = () => setShowModal(false);
@@ -68,7 +80,8 @@ const ColorVisualiser = (props: any) => {
   const handleShowColorModal = () => setShowColorModal(true);
   const handleCloseColorModal = () => setShowColorModal(false);
   const handleShowSlider = () => setShowSlider(!showSlider);
-  const cld = new Cloudinary({ cloud: { cloudName: "dbvxdjjpr" } });
+  const handleShowShareModal = () => setShowShareModal(true);
+  const handleCloseShareModal = () => setShowShareModal(false);
 
   const getImageEmbedding = async (file: any) => {
     handleShowModal();
@@ -300,13 +313,30 @@ const ColorVisualiser = (props: any) => {
     setImage(initialImage);
     undoRedo!.reset();
   };
-  const shareImage = () => {
-    //upload image to firebase and get url
-    // props.handleUpload(image!);
-    if (!image) return;
+  const shareImage = async () => {
+    handleShowShareModal();
+    handleShowLoader();
+    const formData = new FormData();
+    if (image!.src.startsWith("blob")) {
+      formData.append("file", file);
+    } else {
+      formData.append("file", image!.src);
+    }
+    formData.append("upload_preset", "d5mvumcd");
+    formData.append("cloud_name", "dbvxdjjpr");
+    const res = await axios.post(
+      "https://api.cloudinary.com/v1_1/dbvxdjjpr/image/upload",
+      formData
+    );
+
+    const data = await res.data;
+    await handleCloseLoader();
+    await setShareURL(data.url);
+    // await handleCloseShareModal();
   };
   return (
     <div className="colorvisualiser py-5 pb-5">
+      <ToastContainer />
       {!file && (
         <div className="colorvisualiser__container container py-md-2 py-lg-5">
           <div className="row justify-content-center align-items-center gap-5 gap-lg-0">
@@ -377,7 +407,7 @@ const ColorVisualiser = (props: any) => {
                   showSlider={showSlider}
                 />
               </div>
-              <div className="col-12 col-lg-4 colorvisualiser__container__right">
+              <div className="col-12 col-lg-4 colorvisualiser__container__right mt-3 mt-sm-0">
                 <div className="colorvisualiser__tools_container mb-4">
                   <Card className="border-2 shadow-sm">
                     <Card.Body className="d-flex   justify-content-between align-items-center ">
@@ -385,31 +415,25 @@ const ColorVisualiser = (props: any) => {
                         className="colorvisualiser__button"
                         onClick={handleUndo}
                       >
-                        <FontAwesomeIcon icon={faRotateLeft} size="2x" />
+                        <IoIosUndo size={20} />
                       </Button>
                       <Button
                         className="colorvisualiser__button"
                         onClick={handleRedo}
                       >
-                        <FontAwesomeIcon icon={faRotateRight} size="2x" />
+                        <IoIosRedo size={20} />
                       </Button>
                       <Button
                         className="colorvisualiser__button"
                         onClick={handleReset}
                       >
-                        <FontAwesomeIcon icon={faRotate} size="2x" />
+                        <RxReset size={20} />
                       </Button>
                       <Button
                         className="colorvisualiser__button"
                         onClick={handleShowSlider}
                       >
-                        <Image
-                          src="/compare.png"
-                          width={35}
-                          height={35}
-                          alt="Compare"
-                          className="img-fluid"
-                        />
+                        <MdCompare size={20} />
                       </Button>
                       <Button
                         className="colorvisualiser__button"
@@ -417,13 +441,13 @@ const ColorVisualiser = (props: any) => {
                           downloadImage(image!);
                         }}
                       >
-                        <FontAwesomeIcon icon={faDownload} size="2x" />
+                        <IoIosCloudDownload size={20} />
                       </Button>
                       <Button
                         className="colorvisualiser__button"
                         onClick={shareImage}
                       >
-                        <FontAwesomeIcon icon={faShareNodes} size="2x" />
+                        <FaShare size={20} />
                       </Button>
                     </Card.Body>
                   </Card>
@@ -434,6 +458,17 @@ const ColorVisualiser = (props: any) => {
                       Color Palette
                     </Card.Title>
                     <Card.Body className="d-flex flex-wrap gap-2 justify-content-center align-items-center ">
+                      {color ? (
+                        <Button
+                          className="p-0  colorvisualiser__color_button--active"
+                          style={{ backgroundColor: color }}
+                        ></Button>
+                      ) : (
+                        <FaImage
+                          className=" colorvisualiser__color_button"
+                          style={{ color: "#000" }}
+                        />
+                      )}
                       {colordata.map((color: any, index: number) => {
                         return (
                           <Button
@@ -463,13 +498,21 @@ const ColorVisualiser = (props: any) => {
                       Texture
                     </Card.Title>
                     <Card.Body className="d-flex flex-wrap gap-2 justify-content-center align-items-center">
-                      <Button className="p-0 border-0 colorvisualiser__texture_button">
-                        <Image
-                          src={texture ? texture.src : ""}
-                          alt="Texture"
-                          width={90}
-                          height={90}
-                        />
+                      <Button
+                        className="p-0  border-0"
+                        style={{ backgroundColor: "#fff" }}
+                      >
+                        {texture ? (
+                          <Image
+                            src={texture.src}
+                            className="colorvisualiser__currtexture_button"
+                            alt="Texture"
+                            width={90}
+                            height={90}
+                          />
+                        ) : (
+                          <IoMdImage size={90} style={{ color: "#000" }} />
+                        )}
                       </Button>
                       {texturedata
                         .slice(0, 2)
@@ -502,21 +545,110 @@ const ColorVisualiser = (props: any) => {
               </div>
             </div>
           </div>
-          <Modal show={showLoader} onHide={handleCloseLoader} centered>
+          <Modal show={showShareModal} centered onHide={handleCloseShareModal}>
             <Modal.Body>
-              <div className=" d-flex gap-4 justify-content-center align-items-center">
-                <div className="spinner-border ms-2" role="status">
-                  <span className="visually-hidden">Loading...</span>
+              {/* Show loader */}
+              {showLoader ? (
+                <div className="d-flex justify-content-center align-items-center fw-bold mt-2">
+                  Generating Image URL
+                  <div className="spinner-border ms-2 " role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
                 </div>
-                <div className=" fw-bold mt-2">Making your home colorful</div>
-              </div>
+              ) : (
+                <>
+                  <div className=" d-flex gap-4 justify-content-center align-items-center">
+                    <label className="fw-bold " htmlFor="shareURL">
+                      Share URL
+                    </label>
+                    <div className="colorvisualiser__copylink position-relative">
+                      <input
+                        id="shareURL"
+                        type="text"
+                        alt="Share URL"
+                        className="form-control d-inline"
+                        value={shareURL}
+                        readOnly
+                      />
+                    </div>
+                  </div>
+                  <div className="colorvisualiser__share d-flex gap-2 justify-content-around align-items-center mt-3">
+                    <div
+                      className="colorvisualiser__share__icon"
+                      onClick={() => {
+                        window.open(
+                          `https://www.facebook.com/sharer/sharer.php?u=${shareURL}`,
+                          "_blank"
+                        );
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faFacebook} size="2x" />
+                    </div>
+                    <div
+                      className="colorvisualiser__share__icon"
+                      onClick={() => {
+                        window.open(
+                          `https://twitter.com/intent/tweet?url=${shareURL}`,
+                          "_blank"
+                        );
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faTwitter} size="2x" />
+                    </div>
+                    <div
+                      className="colorvisualiser__share__icon"
+                      onClick={() => {
+                        window.open(
+                          `https://www.linkedin.com/shareArticle?mini=true&url=${shareURL}`,
+                          "_blank"
+                        );
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faLinkedin} size="2x" />
+                    </div>
+                    <div
+                      className="colorvisualiser__share__icon"
+                      onClick={() => {
+                        window.open(
+                          `https://api.whatsapp.com/send?text=${shareURL}`,
+                          "_blank"
+                        );
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faWhatsapp} size="2x" />
+                    </div>
+                    <div className="colorvisualiser__share__clipboard">
+                      <div
+                        className="colorvisualiser__copy_button"
+                        onClick={async () => {
+                          if (navigator.clipboard) {
+                            await navigator.clipboard.writeText(shareURL);
+                            toast.success("Copied to Clipboard");
+                          }
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faCopy} size="2x" />
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </Modal.Body>
           </Modal>
-          <Modal show={showColorModal} onHide={handleCloseColorModal}>
+          <Modal show={showColorModal} onHide={handleCloseColorModal} centered>
             <Modal.Body>
-              <div className="d-flex flex-column justify-content-center align-items-center">
-                <div className="fw-bold mt-2">Choose your color</div>
-              </div>
+              <div className="fw-bold text-center mb-2">Select Color</div>
+              <ColorPicker color={colour} onChange={setColour} />
+              <Button
+                className="mt-2 mx-auto d-block"
+                onClick={() => {
+                  setColor(colour.hex);
+                  setTexture(null);
+                  handleCloseColorModal();
+                }}
+              >
+                Select Color
+              </Button>
             </Modal.Body>
           </Modal>
           <Offcanvas
@@ -528,7 +660,7 @@ const ColorVisualiser = (props: any) => {
               <Offcanvas.Title>Texture</Offcanvas.Title>
             </Offcanvas.Header>
             <Offcanvas.Body>
-              <Card className="border-2 shadow-sm p-0">
+              <Card className="border-2 shadow-sm p-0 ">
                 <Card.Body className="d-flex flex-wrap gap-1 justify-content-center p-1">
                   {texturedata.slice(2).map((texture: any, index: number) => {
                     return (
@@ -540,8 +672,8 @@ const ColorVisualiser = (props: any) => {
                         <Image
                           src={texture.url}
                           alt="Texture"
-                          width={100}
-                          height={100}
+                          width={90}
+                          height={90}
                         />
                       </Button>
                     );
@@ -549,15 +681,22 @@ const ColorVisualiser = (props: any) => {
                 </Card.Body>
               </Card>
               <div className="uploadimage">
-                <div className="fw-bold mt-3 ">Upload your own texture</div>
+                <div className="fw-bold mt-3 ">Upload Texture</div>
                 <div className="previewimage mt-3">
-                  <Image
-                    src={textureFile ? textureFile.src : ""}
-                    className="img-fluid"
-                    alt="Texture"
-                    width={200}
-                    height={200}
-                  />
+                  {textureFile ? (
+                    <Image
+                      src={textureFile.src}
+                      className="img-fluid"
+                      alt="Texture"
+                      width={200}
+                      height={200}
+                    />
+                  ) : (
+                    <FaImage
+                      className=" colorvisualiser__color_button"
+                      style={{ color: "#000" }}
+                    />
+                  )}
                 </div>
 
                 <input
@@ -565,7 +704,7 @@ const ColorVisualiser = (props: any) => {
                   accept="image/*"
                   title="Upload Image"
                   ref={textureFileRef}
-                  className="mt-3"
+                  className="mt-3 d-none"
                   onChange={(e) => {
                     if (e.target.files) {
                       const file = e.target.files[0];
@@ -577,7 +716,12 @@ const ColorVisualiser = (props: any) => {
                     }
                   }}
                 />
-                <Button className="mt-3" onClick={async (e) => {}}>
+                <Button
+                  className="mt-3"
+                  onClick={async (e) => {
+                    textureFileRef.current?.click();
+                  }}
+                >
                   <FontAwesomeIcon icon={faUpload} size="1x" /> Upload Image
                 </Button>
               </div>
