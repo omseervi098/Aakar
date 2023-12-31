@@ -8,6 +8,7 @@ import { handleImageScale } from "../utils/helpers/scaleHelper";
 import { ColorPicker, useColor } from "react-color-palette";
 import "react-color-palette/css";
 import { modelScaleProps } from "../utils/helpers/Interfaces";
+import { Share } from "@capacitor/share";
 import {
   onnxMaskToImage,
   loadNpyTensor,
@@ -45,6 +46,7 @@ import {
   faTwitter,
   faWhatsapp,
 } from "@fortawesome/free-brands-svg-icons";
+import { Capacitor } from "@capacitor/core";
 const ColorVisualiser = (props: any) => {
   // const [color, setColor] = useColor("hex", "#121212");
   const {
@@ -314,24 +316,57 @@ const ColorVisualiser = (props: any) => {
     undoRedo!.reset();
   };
   const shareImage = async () => {
-    handleShowShareModal();
-    handleShowLoader();
-    const formData = new FormData();
-    if (image!.src.startsWith("blob")) {
-      formData.append("file", file);
-    } else {
-      formData.append("file", image!.src);
-    }
-    formData.append("upload_preset", "d5mvumcd");
-    formData.append("cloud_name", "dbvxdjjpr");
-    const res = await axios.post(
-      "https://api.cloudinary.com/v1_1/dbvxdjjpr/image/upload",
-      formData
-    );
+    if (
+      Capacitor.getPlatform() === "android" ||
+      Capacitor.getPlatform() === "ios"
+    ) {
+      const formData = new FormData();
+      if (image!.src.startsWith("blob")) {
+        formData.append("file", file);
+      } else {
+        formData.append("file", image!.src);
+      }
+      formData.append("upload_preset", "d5mvumcd");
+      formData.append("cloud_name", "dbvxdjjpr");
+      const res = await axios.post(
+        "https://api.cloudinary.com/v1_1/dbvxdjjpr/image/upload",
+        formData
+      );
 
-    const data = await res.data;
-    await handleCloseLoader();
-    await setShareURL(data.url);
+      const data = await res.data;
+      await Share.share({
+        title: "Aakar",
+        text: "Check out this Room Image from Aakar",
+        url: data.url,
+        dialogTitle: "Share with loved ones",
+      })
+        .then(() => {
+          console.log("Share successful");
+        })
+        .catch((e) => {
+          console.log(e);
+        });
+      return;
+    } else if (Capacitor.getPlatform() === "web") {
+      handleShowShareModal();
+      handleShowLoader();
+      const formData = new FormData();
+      if (image!.src.startsWith("blob")) {
+        formData.append("file", file);
+      } else {
+        formData.append("file", image!.src);
+      }
+      formData.append("upload_preset", "d5mvumcd");
+      formData.append("cloud_name", "dbvxdjjpr");
+      const res = await axios.post(
+        "https://api.cloudinary.com/v1_1/dbvxdjjpr/image/upload",
+        formData
+      );
+
+      const data = await res.data;
+      await handleCloseLoader();
+      await setShareURL(data.url);
+    }
     // await handleCloseShareModal();
   };
   return (

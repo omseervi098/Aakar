@@ -9,7 +9,10 @@ module.exports = {
     REACT_APP_TEMPLATE_ID: "",
   },
   reactStrictMode: true,
+  swcMinify: true,
+  output: "export",
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
@@ -21,6 +24,7 @@ module.exports = {
       },
     ],
   },
+
   //distDir: 'build',
   webpack: (config, {}) => {
     config.resolve.extensions.push(".ts", ".tsx");
